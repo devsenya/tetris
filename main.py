@@ -65,11 +65,11 @@ class Cup:
         for line in range(len(self.grid)):
             print(f"начало линии {line}")
             for col in range(len(self.grid[line])):
-                point1 = (self.posX + self.cell_size * col, self.posY + self.cell_size * line)
-                point2 = (self.posX + self.cell_size + self.cell_size * col, self.posY  + self.cell_size + self.cell_size * line)
-                print(point1, point2)
+                rect = (self.posX + self.cell_size * col, self.posY + self.cell_size * line, 20, 20)
+                # point2 = (self.posX + self.cell_size + self.cell_size * col, self.posY  + self.cell_size + self.cell_size * line)
+                # print(point1, point2)
                 if self.grid[line][col] == 1:
-                    pygame.draw.rect(self.surface, GREEN, (point1, point2))
+                    pygame.draw.rect(self.surface, GREEN, rect)
 
 
 
