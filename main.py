@@ -7,6 +7,7 @@ WINDOW_W, WINDOW_H = 600, 500
 GREY = (180, 180, 180)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
+LIGHT_GREEN = (0, 155, 0)
 FPS = 1
 
 
@@ -17,11 +18,15 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
+        self.cube = [(0, 0), (1, 0), (0, 1), (1, 1)]
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:
+                    self.move_piece()
         return True
 
     def draw(self):
@@ -30,13 +35,27 @@ class Game:
         self.cup.draw()
         pygame.display.flip()
 
+    def move_piece(self):
+        # должно будет работать только если фигура еще падает
+        if self.cube[-1][1] < self.cup.cup_h - 1:
+            for x in range(len(self.cube)):
+                point = list(self.cube[x])
+                point[1] += 1
+                self.cube[x] = tuple(point)
+            self.cup.push_cube(self.cube)
+        else:
+            self.cup.push_cube(self.cube, False)
+
+
+
     def run(self):
         run = True
+
         while run:
             run = self.handle_events()
-
+            self.cup.clear()
+            self.move_piece()
             self.draw()
-            self.cup.push_cube([(0,0),(1,0),(0,1),(1,1)])
             self.clock.tick(FPS)
         pygame.quit()
         quit()
@@ -50,7 +69,13 @@ class Cup:
         self.grid = [[0] * self.cup_w for x in range(self.cup_h)]
         self.posX = (WINDOW_W - cup_w * cell_size) // 2
         self.posY = WINDOW_H - cup_h * cell_size
-        [print(x) for x in self.grid]
+        # [print(x) for x in self.grid]
+
+    def clear(self):
+        for line in range(len(self.grid)):
+            for col in range(len(self.grid[line])):
+                if self.grid[line][col] == 1:
+                    self.grid[line][col] = 0
 
     def draw(self):
         # отрисовка вертикальных линий
@@ -63,21 +88,23 @@ class Cup:
                              (self.posX + self.cup_w * self.cell_size, self.posY + self.cell_size * x))
         # отрисовка фигур
         for line in range(len(self.grid)):
-            print(f"начало линии {line}")
+            # print(f"начало линии {line}")
             for col in range(len(self.grid[line])):
                 rect = (self.posX + self.cell_size * col, self.posY + self.cell_size * line, 20, 20)
                 # point2 = (self.posX + self.cell_size + self.cell_size * col, self.posY  + self.cell_size + self.cell_size * line)
                 # print(point1, point2)
                 if self.grid[line][col] == 1:
                     pygame.draw.rect(self.surface, GREEN, rect)
+                elif self.grid[line][col] == 2:
+                    pygame.draw.rect(self.surface, LIGHT_GREEN, rect)
 
-
-
-    def push_cube(self, addr_cube): #[(0,0),(1,0),(0,1),(1,1)]
+    def push_cube(self, addr_cube, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        status = 1 if is_moving else 2
         for cube in addr_cube:
-            self.grid[cube[1]][cube[0]] = 1
+            self.grid[cube[1]][cube[0]] = status
         [print(x) for x in self.grid]
+
 
 
 if __name__ == "__main__":
