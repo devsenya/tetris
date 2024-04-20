@@ -18,8 +18,8 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
-        self.cube = [(0, 0), (1, 0), (0, 1), (1, 1)]
-
+        self.cube = [(4, 0), (5, 0), (4, 1), (5, 1)]
+        # self.cube = [(0, 0), (1, 0), (0, 1), (1, 1)]
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -36,15 +36,33 @@ class Game:
         pygame.display.flip()
 
     def move_piece(self):
+        # подение куба
         # должно будет работать только если фигура еще падает
+        # if self.cube[-1][1] < self.cup.cup_h - 1:
+        #     for x in range(len(self.cube)):
+        #         point = list(self.cube[x])
+        #         point[1] += 1
+        #         self.cube[x] = tuple(point)
+        #     self.cup.move_cube(self.cube)
+        # else:
+        #     self.cup.move_cube(self.cube, False)
+
+
+        # движение вправо и влево
         if self.cube[-1][1] < self.cup.cup_h - 1:
             for x in range(len(self.cube)):
                 point = list(self.cube[x])
-                point[1] += 1
-                self.cube[x] = tuple(point)
-            self.cup.push_cube(self.cube)
+                if point[0] <= 0:
+                    break
+            else:
+                for x in range(len(self.cube)):
+                    point = list(self.cube[x])
+                    point[0] -= 1
+                    self.cube[x] = tuple(point)
+            self.cup.set_move_status(self.cube)
         else:
-            self.cup.push_cube(self.cube, False)
+            self.cup.set_move_status(self.cube, False)
+
 
 
 
@@ -98,7 +116,7 @@ class Cup:
                 elif self.grid[line][col] == 2:
                     pygame.draw.rect(self.surface, LIGHT_GREEN, rect)
 
-    def push_cube(self, addr_cube, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
+    def set_move_status(self, addr_cube, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         status = 1 if is_moving else 2
         for cube in addr_cube:
