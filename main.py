@@ -8,7 +8,10 @@ GREY = (180, 180, 180)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 LIGHT_GREEN = (0, 155, 0)
-FPS = 1
+FPS = 120
+fall_time = 1  # Интервал времени между падениями фигурки (в секундах)
+current_time = 0
+now = time.time()
 
 
 class Game:
@@ -18,15 +21,20 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
-        self.cube = [(4, 0), (5, 0), (4, 1), (5, 1)]
-        # self.cube = [(0, 0), (1, 0), (0, 1), (1, 1)]
+        self.piece = Line("i-type", [(5, 0), (5, 1), (5, 2), (5, 3)])
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_s:
-                    self.move_piece()
+                    self.piece.move_down(self.cup)
+                elif event.key == pygame.K_a:
+                    self.piece.move_left(self.cup)
+                elif event.key == pygame.K_d:
+                    self.piece.move_right(self.cup)
+
         return True
 
     def draw(self):
@@ -36,42 +44,18 @@ class Game:
         pygame.display.flip()
 
     def move_piece(self):
+        global current_time, now
+        now = time.time()
         # подение куба
         # должно будет работать только если фигура еще падает
-        # if self.cube[-1][1] < self.cup.height - 1:
-        #     for x in range(len(self.cube)):
-        #         point = list(self.cube[x])
-        #         point[1] += 1
-        #         self.cube[x] = tuple(point)
-        #     self.cup.move_cube(self.cube)
-        # else:
-        #     self.cup.move_cube(self.cube, False)
-
-
-        # движение вправо и влево
-        if self.cube[-1][1] < self.cup.height - 1:
-            for x in range(len(self.cube)):
-                point = list(self.cube[x])
-                if point[0] <= 0:
-                    break
-            else:
-                for x in range(len(self.cube)):
-                    point = list(self.cube[x])
-                    point[0] -= 1
-                    self.cube[x] = tuple(point)
-            self.cup.set_move_status(self.cube)
-        else:
-            self.cup.set_move_status(self.cube, False)
-
-
-
-
+        if now - current_time >= fall_time:
+            self.piece.move_down(self.cup)
+    
     def run(self):
         run = True
 
         while run:
             run = self.handle_events()
-            self.cup.clear()
             self.move_piece()
             self.draw()
             self.clock.tick(FPS)
@@ -108,11 +92,9 @@ class Cup:
                              (self.posX + self.width * self.cell_size, self.posY + self.cell_size * x))
         # отрисовка фигур
         for line in range(len(self.gridList)):
-            # print(f"начало линии {line}")
             for col in range(len(self.gridList[line])):
                 rect = (self.posX + self.cell_size * col, self.posY + self.cell_size * line, 20, 20)
-                # point2 = (self.posX + self.cell_size + self.cell_size * col, self.posY  + self.cell_size + self.cell_size * line)
-                # print(point1, point2)
+
                 if self.gridList[line][col] == 1:
                     pygame.draw.rect(self.surface, GREEN, rect)
                 elif self.gridList[line][col] == 2:
@@ -126,22 +108,47 @@ class Cup:
             self.gridList[cube[1]][cube[0]] = status
         [print(x) for x in self.gridList]
 
-class Piece:
+
+class Line:
     def __init__(self, type, coords):
         self.type = type
         self.massBlocks = coords
 
-    def move_right(self):
-        for x in range(len(self.massBlocks)):
-            point = list(self.massBlocks[x])
-            point[0] += 1
-            self.massBlocks[x] = tuple(point)
+    def move_left(self, cup):
+        min_x = min(self.massBlocks, key=lambda block: block[0])[0]
+        if min_x > 0:
+            cup.clear()
+            for x in range(len(self.massBlocks)):
+                point = list(self.massBlocks[x])
+                point[0] -= 1
+                self.massBlocks[x] = tuple(point)
+            cup.set_move_status(self.massBlocks)
 
-    def move_left(self):
-        for x in range(len(self.massBlocks)):
-            point = list(self.massBlocks[x])
-            point[0] -= 1
-            self.massBlocks[x] = tuple(point)
+    def move_right(self, cup):
+        max_x = max(self.massBlocks, key=lambda block: block[0])[0]
+        if max_x < cup.width-1:
+            cup.clear()
+            for x in range(len(self.massBlocks)):
+                point = list(self.massBlocks[x])
+                point[0] += 1
+                self.massBlocks[x] = tuple(point)
+            cup.set_move_status(self.massBlocks)
+
+    def move_down(self, cup):
+        global current_time, now
+        now = time.time()
+        max_y = max(self.massBlocks, key=lambda X: X[1])[1]
+        if max_y < cup.height - 1:
+            cup.clear()
+            for x in range(len(self.massBlocks)):
+                point = list(self.massBlocks[x])
+                point[1] += 1
+                self.massBlocks[x] = tuple(point)
+            cup.set_move_status(self.massBlocks)
+            current_time = now
+        else:
+            cup.set_move_status(self.massBlocks, False)
+
 
 if __name__ == "__main__":
     game = Game()
