@@ -29,11 +29,11 @@ class Game:
                 return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_s:
-                    self.piece.move_down(self.cup)
+                    self.move_down()
                 elif event.key == pygame.K_a:
-                    self.piece.move_left(self.cup)
+                    self.move_left()
                 elif event.key == pygame.K_d:
-                    self.piece.move_right(self.cup)
+                    self.move_right()
 
         return True
 
@@ -49,8 +49,56 @@ class Game:
         # подение куба
         # должно будет работать только если фигура еще падает
         if now - current_time >= fall_time:
-            self.piece.move_down(self.cup)
-    
+            self.move_down()
+
+    def spawn_piece(self):
+        for x in self.cup.gridList:
+            if 1 in x:
+                break
+        else:
+            self.piece = Line("i-type", [(5, 0), (5, 1), (5, 2), (5, 3)])
+
+    # скорее всего это должа делать игра
+    def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        status = 1 if is_moving else 2
+        for cube in self.piece.massBlocks:
+            self.cup.gridList[cube[1]][cube[0]] = status
+        [print(x) for x in self.cup.gridList]
+
+    def move_left(self):
+        if self.piece.massBlocks and min(self.piece.massBlocks, key=lambda block: block[0])[0] > 0:
+            self.cup.clear()
+            for x in range(len(self.piece.massBlocks)):
+                point = list(self.piece.massBlocks[x])
+                point[0] -= 1
+                self.piece.massBlocks[x] = tuple(point)
+            self.set_move_status(self.piece.massBlocks)
+
+    def move_right(self):
+        if self.piece.massBlocks and max(self.piece.massBlocks, key=lambda block: block[0])[0] < self.cup.width - 1:
+            self.cup.clear()
+            for x in range(len(self.piece.massBlocks)):
+                point = list(self.piece.massBlocks[x])
+                point[0] += 1
+                self.piece.massBlocks[x] = tuple(point)
+            self.set_move_status(self.piece.massBlocks)
+
+    def move_down(self):
+        global current_time, now
+        now = time.time()
+        if self.piece.massBlocks and max(self.piece.massBlocks, key=lambda X: X[1])[1] < self.cup.height - 1:
+            self.cup.clear()
+            for x in range(len(self.piece.massBlocks)):
+                point = list(self.piece.massBlocks[x])
+                point[1] += 1
+                self.piece.massBlocks[x] = tuple(point)
+            self.set_move_status(self.piece.massBlocks)
+            current_time = now
+        else:
+            self.set_move_status(False)
+            self.piece.massBlocks.clear()
+
     def run(self):
         run = True
 
@@ -58,6 +106,7 @@ class Game:
             run = self.handle_events()
             self.move_piece()
             self.draw()
+            self.spawn_piece()
             self.clock.tick(FPS)
         pygame.quit()
         quit()
@@ -100,56 +149,20 @@ class Cup:
                 elif self.gridList[line][col] == 2:
                     pygame.draw.rect(self.surface, LIGHT_GREEN, rect)
 
-    # скорее всего это должа делать игра
-    def set_move_status(self, figura, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        status = 1 if is_moving else 2
-        for cube in figura:
-            self.gridList[cube[1]][cube[0]] = status
-        [print(x) for x in self.gridList]
-
 
 class Line:
     def __init__(self, type, coords):
         self.type = type
         self.massBlocks = coords
 
-    def move_left(self, cup):
-        min_x = min(self.massBlocks, key=lambda block: block[0])[0]
-        if min_x > 0:
-            cup.clear()
-            for x in range(len(self.massBlocks)):
-                point = list(self.massBlocks[x])
-                point[0] -= 1
-                self.massBlocks[x] = tuple(point)
-            cup.set_move_status(self.massBlocks)
+    # def check_collision(self, cup):
 
-    def move_right(self, cup):
-        max_x = max(self.massBlocks, key=lambda block: block[0])[0]
-        if max_x < cup.width-1:
-            cup.clear()
-            for x in range(len(self.massBlocks)):
-                point = list(self.massBlocks[x])
-                point[0] += 1
-                self.massBlocks[x] = tuple(point)
-            cup.set_move_status(self.massBlocks)
 
-    def move_down(self, cup):
-        global current_time, now
-        now = time.time()
-        max_y = max(self.massBlocks, key=lambda X: X[1])[1]
-        if max_y < cup.height - 1:
-            cup.clear()
-            for x in range(len(self.massBlocks)):
-                point = list(self.massBlocks[x])
-                point[1] += 1
-                self.massBlocks[x] = tuple(point)
-            cup.set_move_status(self.massBlocks)
-            current_time = now
-        else:
-            cup.set_move_status(self.massBlocks, False)
+
 
 
 if __name__ == "__main__":
     game = Game()
     game.run()
+
+
