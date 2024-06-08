@@ -21,7 +21,7 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
-        self.piece = Line("i-type", [(5, 0), (5, 1), (5, 2), (5, 3)])
+        self.piece = T_Type("i-type", 5, 0)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -56,7 +56,7 @@ class Game:
             if 1 in x:
                 break
         else:
-            self.piece = Line("i-type", [(5, 0), (5, 1), (5, 2), (5, 3)])
+            self.piece = T_Type("i-type", 5, 0)
 
     # скорее всего это должа делать игра
     def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
@@ -64,10 +64,10 @@ class Game:
         status = 1 if is_moving else 2
         for cube in self.piece.massBlocks:
             self.cup.gridList[cube[1]][cube[0]] = status
-        [print(x) for x in self.cup.gridList]
+        # [print(x) for x in self.cup.gridList]
 
     def move_left(self):
-        if self.piece.massBlocks and min(self.piece.massBlocks, key=lambda block: block[0])[0] > 0:
+        if self.check_left():
             self.cup.clear()
             for x in range(len(self.piece.massBlocks)):
                 point = list(self.piece.massBlocks[x])
@@ -76,7 +76,7 @@ class Game:
             self.set_move_status(self.piece.massBlocks)
 
     def move_right(self):
-        if self.piece.massBlocks and max(self.piece.massBlocks, key=lambda block: block[0])[0] < self.cup.width - 1:
+        if self.check_right():
             self.cup.clear()
             for x in range(len(self.piece.massBlocks)):
                 point = list(self.piece.massBlocks[x])
@@ -84,10 +84,32 @@ class Game:
                 self.piece.massBlocks[x] = tuple(point)
             self.set_move_status(self.piece.massBlocks)
 
+    def check_left(self):
+        for block in self.piece.massBlocks:
+            if block[0] <= 0 or self.cup.gridList[block[1]][block[0]-1] == 2:
+                return False
+        else:
+            return True
+
+    def check_right(self):
+        for block in self.piece.massBlocks:
+            if block[0] >= self.cup.width - 1 or self.cup.gridList[block[1]][block[0]+1] == 2:
+                return False
+        else:
+            return True
+
+    def check_down(self):
+        for block in self.piece.massBlocks:
+            if block[1] >= self.cup.height - 1 or self.cup.gridList[block[1]+1][block[0]] == 2:
+                return False
+        else:
+            return True
+
     def move_down(self):
         global current_time, now
         now = time.time()
-        if self.piece.massBlocks and max(self.piece.massBlocks, key=lambda X: X[1])[1] < self.cup.height - 1:
+        self.check_down()
+        if self.check_down():
             self.cup.clear()
             for x in range(len(self.piece.massBlocks)):
                 point = list(self.piece.massBlocks[x])
@@ -150,16 +172,40 @@ class Cup:
                     pygame.draw.rect(self.surface, LIGHT_GREEN, rect)
 
 
-class Line:
-    def __init__(self, type, coords):
+class I_Type:
+    def __init__(self, type, X, Y):
         self.type = type
-        self.massBlocks = coords
+        self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X, Y + 2)]
 
-    # def check_collision(self, cup):
+class O_Type:
+    def __init__(self, type, X, Y):
+        self.type = type
+        self.massBlocks = [(X, Y), (X + 1, Y), (X, Y + 1), (X + 1, Y + 1)]
 
+# class Z_Type:
+#     def __init__(self, type, X, Y):
+#         self.type = type
+#         self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X, Y + 2)]
+#
+# class S_Type:
+#     def __init__(self, type, X, Y):
+#         self.type = type
+#         self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X, Y + 2)]
 
+class L_Type:
+    def __init__(self, type, X, Y):
+        self.type = type
+        self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X + 1, Y + 1)]
 
+class J_Type:
+    def __init__(self, type, X, Y):
+        self.type = type
+        self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X - 1, Y + 1)]
 
+class T_Type:
+    def __init__(self, type, X, Y):
+        self.type = type
+        self.massBlocks = [(X - 1, Y), (X, Y), (X + 1, Y), (X, Y + 1)]
 
 if __name__ == "__main__":
     game = Game()
