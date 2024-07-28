@@ -1,4 +1,5 @@
 import pygame
+
 import random, time, sys
 from pygame.locals import *
 
@@ -14,6 +15,15 @@ current_time = 0
 now = time.time()
 
 
+def randomPiece():
+    num = random.randint(1,1)
+    match num:
+        case 1:
+            return I_Type("i-type", 5, 0)
+        case 2:
+            return S_Type("z-type", 5, 0)
+
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -21,7 +31,7 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
-        self.piece = I_Type("i-type", 5, 0)
+        self.piece = randomPiece()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -35,7 +45,7 @@ class Game:
                 elif event.key == pygame.K_d:
                     self.move_right()
                 elif event.key == pygame.K_w:
-                    self.piece.rotate()
+                    self.check_rotate()
 
         return True
 
@@ -58,7 +68,7 @@ class Game:
             if 1 in x:
                 break
         else:
-            self.piece = I_Type("i-type", 5, 0)
+            self.piece = randomPiece()
 
     # скорее всего это должа делать игра
     def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
@@ -104,6 +114,14 @@ class Game:
                 return False
         else:
             return True
+
+    # TOD: подумать: что не так с условием - работает не совсем корректно
+    def check_rotate(self):
+        for block in self.piece.nextRotate:
+            if not (0 <= block[0] < self.cup.width and self.cup.gridList[block[1]][block[0] + 1] != 2):
+                return False
+        else:
+            self.piece.rotate()
 
     def move_down(self):
         global current_time, now
@@ -188,6 +206,11 @@ class I_Type:
         self.variationNum = (self.variationNum + 1) % len(self.variations)
         self.update()
 
+    # свойство-геттер
+    @property
+    def nextRotate(self):
+        return self.variations[(self.variationNum + 1) % len(self.variations)]
+
     def update(self):
         self.variations = [[(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X, self.Y + 2)],
                            [(self.X - 1, self.Y), (self.X, self.Y), (self.X + 1, self.Y), (self.X + 2, self.Y)]]
@@ -200,13 +223,36 @@ class O_Type:
         self.massBlocks = [(X, Y), (X + 1, Y), (X, Y + 1), (X + 1, Y + 1)]
 
 
-class Z_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X - 1, Y - 1), (X, Y - 1), (X, Y), (X + 1, Y)]
-
 
 class S_Type:
+
+
+    def __init__(self, type, X, Y):
+        self.X = X
+        self.Y = Y
+        self.type = type
+        self.variationNum = 0
+        self.variations = self.update()
+        self.massBlocks = self.variations[self.variationNum]
+
+    def set_XY(self, X, Y):
+        self.X = X
+        self.Y = Y
+        self.update()
+
+    def rotate(self):
+        self.variationNum = (self.variationNum + 1) % len(self.variations)
+        self.update()
+
+    def update(self):
+        self.variations = [[(self.X - 1, self.Y + 1), (self.X, self.Y + 1), (self.X, self.Y), (self.X + 1, self.Y)],
+                           [(self.X - 1, self.Y - 1), (self.X - 1, self.Y), (self.X, self.Y), (self.X, self.Y + 1)]]
+        self.massBlocks = self.variations[self.variationNum]
+        return self.variations
+
+
+
+class Z_Type:
     def __init__(self, type, X, Y):
         self.type = type
         self.massBlocks = [(X - 1, Y), (X, Y), (X, Y - 1), (X + 1, Y - 1)]
