@@ -1,6 +1,6 @@
 import pygame
 
-import random, time, sys
+import random, time, sys, abc
 from pygame.locals import *
 
 fps = 25
@@ -16,10 +16,10 @@ now = time.time()
 
 
 def randomPiece():
-    num = random.randint(1,1)
+    num = random.randint(1, 1)
     match num:
         case 1:
-            return I_Type("i-type", 5, 0)
+            return T_Type("o-type", 5, 0)
         case 2:
             return S_Type("z-type", 5, 0)
 
@@ -85,13 +85,13 @@ class Game:
             #     point = list(self.piece.massBlocks[x])
             #     point[0] -= 1
             #     self.piece.massBlocks[x] = tuple(point)
-            self.piece.set_XY(self.piece.X-1, self.piece.Y)
+            self.piece.set_XY(self.piece.X - 1, self.piece.Y)
             self.set_move_status(self.piece.massBlocks)
 
     def move_right(self):
         if self.check_right():
             self.cup.clear()
-            self.piece.set_XY(self.piece.X+1, self.piece.Y)
+            self.piece.set_XY(self.piece.X + 1, self.piece.Y)
             self.set_move_status(self.piece.massBlocks)
 
     def check_left(self):
@@ -115,12 +115,15 @@ class Game:
         else:
             return True
 
-    # TOD: подумать: что не так с условием - работает не совсем корректно
+  
     def check_rotate(self):
         for block in self.piece.nextRotate:
-            if not (0 <= block[0] < self.cup.width and self.cup.gridList[block[1]][block[0] + 1] != 2):
+            if not (0 <= block[0] < self.cup.width and block[1] < self.cup.height and self.cup.gridList[block[1]][
+                block[0]] != 2):
+                print("2222222222")
                 return False
         else:
+            print("11111111111")
             self.piece.rotate()
 
     def move_down(self):
@@ -188,7 +191,7 @@ class Cup:
                     pygame.draw.rect(self.surface, LIGHT_GREEN, rect)
 
 
-class I_Type:
+class Shape(abc.ABC):
     def __init__(self, type, X, Y):
         self.X = X
         self.Y = Y
@@ -211,39 +214,27 @@ class I_Type:
     def nextRotate(self):
         return self.variations[(self.variationNum + 1) % len(self.variations)]
 
+    @abc.abstractmethod
+    def update(self):
+        pass
+
+
+class I_Type(Shape):
     def update(self):
         self.variations = [[(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X, self.Y + 2)],
                            [(self.X - 1, self.Y), (self.X, self.Y), (self.X + 1, self.Y), (self.X + 2, self.Y)]]
         self.massBlocks = self.variations[self.variationNum]
         return self.variations
 
-class O_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X, Y), (X + 1, Y), (X, Y + 1), (X + 1, Y + 1)]
 
-
-
-class S_Type:
-
-
-    def __init__(self, type, X, Y):
-        self.X = X
-        self.Y = Y
-        self.type = type
-        self.variationNum = 0
-        self.variations = self.update()
+class O_Type(Shape):
+    def update(self):
+        self.variations = [[(self.X, self.Y), (self.X + 1, self.Y), (self.X, self.Y + 1), (self.X + 1, self.Y + 1)]]
         self.massBlocks = self.variations[self.variationNum]
+        return self.variations
 
-    def set_XY(self, X, Y):
-        self.X = X
-        self.Y = Y
-        self.update()
 
-    def rotate(self):
-        self.variationNum = (self.variationNum + 1) % len(self.variations)
-        self.update()
-
+class S_Type(Shape):
     def update(self):
         self.variations = [[(self.X - 1, self.Y + 1), (self.X, self.Y + 1), (self.X, self.Y), (self.X + 1, self.Y)],
                            [(self.X - 1, self.Y - 1), (self.X - 1, self.Y), (self.X, self.Y), (self.X, self.Y + 1)]]
@@ -251,29 +242,42 @@ class S_Type:
         return self.variations
 
 
-
-class Z_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X - 1, Y), (X, Y), (X, Y - 1), (X + 1, Y - 1)]
-
-
-class L_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X + 1, Y + 1)]
+class Z_Type(Shape):
+    def update(self):
+        self.variations = [[(self.X - 1, self.Y - 1), (self.X, self.Y - 1), (self.X, self.Y), (self.X + 1, self.Y)],
+                           [(self.X + 1, self.Y - 1), (self.X + 1, self.Y), (self.X, self.Y), (self.X, self.Y + 1)]]
+        self.massBlocks = self.variations[self.variationNum]
+        return self.variations
 
 
-class J_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X, Y - 1), (X, Y), (X, Y + 1), (X - 1, Y + 1)]
+class L_Type(Shape):
+    def update(self):
+        self.variations = [[(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X + 1, self.Y + 1)],
+                           [(self.X + 1, self.Y), (self.X, self.Y), (self.X - 1, self.Y), (self.X - 1, self.Y + 1)],
+                           [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X - 1, self.Y - 1)],
+                           [(self.X + 1, self.Y), (self.X, self.Y), (self.X - 1, self.Y), (self.X + 1, self.Y - 1)]]
+        self.massBlocks = self.variations[self.variationNum]
+        return self.variations
 
 
-class T_Type:
-    def __init__(self, type, X, Y):
-        self.type = type
-        self.massBlocks = [(X - 1, Y), (X, Y), (X + 1, Y), (X, Y + 1)]
+class J_Type(Shape):
+    def update(self):
+        self.variations = [[(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X - 1, self.Y + 1)],
+                           [(self.X + 1, self.Y), (self.X, self.Y), (self.X - 1, self.Y), (self.X - 1, self.Y - 1)],
+                           [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X + 1, self.Y - 1)],
+                           [(self.X + 1, self.Y), (self.X, self.Y), (self.X - 1, self.Y), (self.X + 1, self.Y + 1)]]
+        self.massBlocks = self.variations[self.variationNum]
+        return self.variations
+
+
+class T_Type(Shape):
+    def update(self):
+        self.variations = [[(self.X - 1, self.Y), (self.X, self.Y), (self.X + 1, self.Y), (self.X, self.Y + 1)],
+                           [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X - 1, self.Y)],
+                           [(self.X - 1, self.Y), (self.X, self.Y), (self.X + 1, self.Y), (self.X, self.Y - 1)],
+                           [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X + 1, self.Y)]]
+        self.massBlocks = self.variations[self.variationNum]
+        return self.variations
 
 
 if __name__ == "__main__":
