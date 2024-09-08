@@ -13,6 +13,11 @@ current_time = 0
 now = time.time()
 
 
+def drawRect(surface, color, rect):
+    pygame.draw.rect(surface, (0, 0, 0), rect)
+    pygame.draw.rect(surface, color, (rect[0] + 1, rect[1] + 1, rect[2] - 3, rect[3] - 3))
+
+
 def randomPiece():
     num = random.randint(1, 7)
     match num:
@@ -101,21 +106,21 @@ class Game:
 
     def check_left(self):
         for block in self.piece.massBlocks:
-            if block[0] <= 0 or self.cup.gridList[block[1]][block[0] - 1] > 10:
+            if block[0] <= 0 or self.cup.gridList[block[1]][block[0] - 1] >= 10:
                 return False
         else:
             return True
 
     def check_right(self):
         for block in self.piece.massBlocks:
-            if block[0] >= self.cup.width - 1 or self.cup.gridList[block[1]][block[0] + 1] > 10:
+            if block[0] >= self.cup.width - 1 or self.cup.gridList[block[1]][block[0] + 1] >= 10:
                 return False
         else:
             return True
 
     def check_down(self):
         for block in self.piece.massBlocks:
-            if block[1] >= self.cup.height - 1 or self.cup.gridList[block[1] + 1][block[0]] > 10:
+            if block[1] >= self.cup.height - 1 or self.cup.gridList[block[1] + 1][block[0]] >= 10:
                 return False
         else:
             return True
@@ -165,16 +170,32 @@ class Cup:
         self.gridList = [[0] * self.width for x in range(self.height)]
         self.posX = (WINDOW_W - self.width * cell_size) // 2
         self.posY = WINDOW_H - self.height * cell_size
-        self.colors = [(0, 255, 0), (135, 206, 250), (144, 238, 144), (255, 182, 193), (255, 165, 0), (221, 160, 221),
-                       (255, 255, 102), (175, 238, 238)]
+        self.colors = {
+            "LIGHT_BLUE": (135, 206, 250),
+            "BLUE": (70, 130, 180),
+            "LIGHT_GREEN": (144, 238, 144),
+            "GREEN": (34, 139, 34),
+            "LIGHT_PINK": (255, 182, 193),
+            "PINK": (220, 20, 60),
+            "LIGHT_ORANGE": (255, 165, 0),
+            "ORANGE": (255, 140, 0),
+            "LIGHT_PURPLE": (221, 160, 221),
+            "PURPLE": (138, 43, 226),
+            "LIGHT_YELLOW": (255, 255, 102),
+            "YELLOW": (255, 215, 0),
+            "LIGHT_MINT": (175, 238, 238),
+            "MINT": (72, 209, 204)
+        }
 
     def clear(self):
+
         for line in range(len(self.gridList)):
             for col in range(len(self.gridList[line])):
                 if self.gridList[line][col] in [1, 2, 3, 4, 5, 6, 7, 8]:
                     self.gridList[line][col] = 0
 
     def draw(self, colors):
+
         # отрисовка вертикальных линий
         for numLine in range(self.width + 1):
             startPoint = self.posX + self.cell_size * numLine, self.posY
@@ -192,21 +213,33 @@ class Cup:
 
                 match self.gridList[line][col]:
                     case 1:
-                        pygame.draw.rect(self.surface, self.colors[0], rect)
+                        drawRect(self.surface, self.colors["LIGHT_BLUE"], rect)
                     case 2:
-                        pygame.draw.rect(self.surface, self.colors[1], rect)
+                        drawRect(self.surface, self.colors["LIGHT_GREEN"], rect)
                     case 3:
-                        pygame.draw.rect(self.surface, self.colors[2], rect)
+                        drawRect(self.surface, self.colors["LIGHT_PINK"], rect)
                     case 4:
-                        pygame.draw.rect(self.surface, self.colors[3], rect)
+                        drawRect(self.surface, self.colors["LIGHT_ORANGE"], rect)
                     case 5:
-                        pygame.draw.rect(self.surface, self.colors[4], rect)
+                        drawRect(self.surface, self.colors["LIGHT_PURPLE"], rect)
                     case 6:
-                        pygame.draw.rect(self.surface, self.colors[5], rect)
+                        drawRect(self.surface, self.colors["LIGHT_YELLOW"], rect)
                     case 7:
-                        pygame.draw.rect(self.surface, self.colors[6], rect)
-                    case 8:
-                        pygame.draw.rect(self.surface, self.colors[7], rect)
+                        drawRect(self.surface, self.colors["LIGHT_MINT"], rect)
+                    case 10:
+                        drawRect(self.surface, self.colors["BLUE"], rect)
+                    case 20:
+                        drawRect(self.surface, self.colors["GREEN"], rect)
+                    case 30:
+                        drawRect(self.surface, self.colors["PINK"], rect)
+                    case 40:
+                        drawRect(self.surface, self.colors["ORANGE"], rect)
+                    case 50:
+                        drawRect(self.surface, self.colors["PURPLE"], rect)
+                    case 60:
+                        drawRect(self.surface, self.colors["YELLOW"], rect)
+                    case 70:
+                        drawRect(self.surface, self.colors["MINT"], rect)
 
 
 class Shape(abc.ABC):
@@ -239,7 +272,7 @@ class Shape(abc.ABC):
 class I_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 2
+        self.id = 1
         # self.moving_color = (135, 206, 250)  # Светлый цвет
         # self.stopped_color = (70, 130, 180)  # Тёмный цвет
 
@@ -253,7 +286,7 @@ class I_Type(Shape):
 class O_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 3
+        self.id = 2
         # self.moving_color = (144, 238, 144)  # Светлый цвет
         # self.stopped_color = (34, 139, 34)  # Тёмный цвет
 
@@ -266,9 +299,9 @@ class O_Type(Shape):
 class S_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 4
+        self.id = 3
         # self.moving_color = (255, 182, 193)  # Светлый цвет
-        # self.stopped_color = (220, 20, 60)  # Тёмный цвет
+        # self.stopped_color =   # Тёмный цвет
 
     def update(self):
         self.variations = [[(self.X - 1, self.Y + 1), (self.X, self.Y + 1), (self.X, self.Y), (self.X + 1, self.Y)],
@@ -280,7 +313,7 @@ class S_Type(Shape):
 class Z_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 5
+        self.id = 4
         # self.moving_color = (255, 165, 0)  # Светлый цвет
         # self.stopped_color = (255, 140, 0)  # Тёмный цвет
 
@@ -294,7 +327,7 @@ class Z_Type(Shape):
 class L_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 6
+        self.id = 5
         # self.moving_color = (221, 160, 221)  # Светлый цвет
         # self.stopped_color = (138, 43, 226)  # Тёмный цвет
 
@@ -310,7 +343,7 @@ class L_Type(Shape):
 class J_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 7
+        self.id = 6
         # self.moving_color = (255, 255, 102)  # Светлый цвет
         # self.stopped_color = (255, 215, 0)  # Тёмный цвет
 
@@ -326,7 +359,7 @@ class J_Type(Shape):
 class T_Type(Shape):
     def __init__(self, X, Y):
         super().__init__(X, Y)
-        self.id = 8
+        self.id = 7
         # self.moving_color = (175, 238, 238)  # Светлый цвет
         # self.stopped_color = (72, 209, 204)  # Тёмный цвет
 
@@ -342,3 +375,4 @@ class T_Type(Shape):
 if __name__ == "__main__":
     game = Game()
     game.run()
+
