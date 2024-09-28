@@ -90,7 +90,12 @@ class Game:
     def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
         status = self.piece.id if is_moving else self.piece.id * 10
         for cube in self.piece.massBlocks:
-            self.cup.gridList[cube[1]][cube[0]] = status
+            try:
+                self.cup.gridList[cube[1]][cube[0]] = status
+            except:
+                print([print(x) for x in self.cup.gridList])
+        if status >= 10:
+            self.cup.delete_lines()
 
     def move_left(self):
         if self.check_left():
@@ -154,6 +159,7 @@ class Game:
 
         while run:
             run = self.handle_events()
+
             self.move_piece()
             self.draw()
             self.spawn_piece()
@@ -188,11 +194,32 @@ class Cup:
         }
 
     def clear(self):
-
         for line in range(len(self.gridList)):
             for col in range(len(self.gridList[line])):
                 if self.gridList[line][col] in [1, 2, 3, 4, 5, 6, 7, 8]:
                     self.gridList[line][col] = 0
+
+    def delete_lines(self):
+        lines = []
+        # flag = False
+        for x in range(len(self.gridList) - 1, -1, -1):
+            if 0 not in self.gridList[x]:
+                # if not flag:
+                #     [print(x) for x in self.gridList]
+                flag = True
+                lines.append(x)
+
+        for m in lines:
+            del self.gridList[m]
+
+        for _ in lines:
+            self.gridList.insert(0, [0] * self.width)
+        #
+        # if flag:
+        #     print()
+        #     [print(x) for x in self.gridList]
+        #     print()
+        #     print()
 
     def draw(self, colors):
 
@@ -375,4 +402,3 @@ class T_Type(Shape):
 if __name__ == "__main__":
     game = Game()
     game.run()
-
