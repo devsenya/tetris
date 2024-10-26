@@ -8,7 +8,7 @@ WINDOW_W, WINDOW_H = 600, 500
 GREY = (180, 180, 180)
 WHITE = (255, 255, 255)
 FPS = 120
-fall_time = 1  # Интервал времени между падениями фигурки (в секундах)
+fall_time = 0.5  # Интервал времени между падениями фигурки (в секундах)
 current_time = 0
 now = time.time()
 
@@ -22,17 +22,17 @@ def randomPiece():
     num = random.randint(1, 7)
     match num:
         case 1:
-            return I_Type(5, 0)
+            return I_Type(5, 1)
         case 2:
-            return O_Type(5, 0)
+            return O_Type(4, 0)
         case 3:
             return S_Type(5, 0)
         case 4:
-            return Z_Type(5, 0)
+            return Z_Type(5, 1)
         case 5:
-            return L_Type(5, 0)
+            return L_Type(5, 1)
         case 6:
-            return J_Type(5, 0)
+            return J_Type(5, 1)
         case 7:
             return T_Type(5, 0)
 
@@ -44,7 +44,7 @@ class Game:
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
-        self.piece = randomPiece()
+        self.spawn_piece()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -52,7 +52,7 @@ class Game:
                 return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_s:
-                    self.move_down()
+                    self.drop_down()
                 elif event.key == pygame.K_a:
                     self.move_left()
                 elif event.key == pygame.K_d:
@@ -60,7 +60,7 @@ class Game:
                 elif event.key == pygame.K_w:
                     self.check_rotate()
                 elif event.key == pygame.K_SPACE:
-                    [print(x) for x in self.cup.gridList]
+                    pass
 
         return True
 
@@ -79,12 +79,18 @@ class Game:
             self.move_down()
 
     def spawn_piece(self):
+        global now, current_time
         for line in self.cup.gridList:
             for x in line:
                 if 1 <= x <= 7:
                     return
         else:
+            print("заспавнили")
             self.piece = randomPiece()
+            self.piece.set_XY(self.piece.X, self.piece.Y)
+            self.set_move_status()
+            now = time.time()
+            current_time = now
 
     # скорее всего это должа делать игра
     def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]
@@ -93,8 +99,9 @@ class Game:
             try:
                 self.cup.gridList[cube[1]][cube[0]] = status
             except:
-                print([print(x) for x in self.cup.gridList])
+                print(cube[1])
         if status >= 10:
+            # TODO: Вынести в отдельную функцию/метод
             self.cup.delete_lines()
 
     def move_left(self):
@@ -125,14 +132,20 @@ class Game:
 
     def check_down(self):
         for block in self.piece.massBlocks:
-            if block[1] >= self.cup.height - 1 or self.cup.gridList[block[1] + 1][block[0]] >= 10:
+            if block[1] + 1 >= self.cup.height or self.cup.gridList[block[1] + 1][block[0]] >= 10:
                 return False
         else:
             return True
 
+    def drop_down(self):
+        while self.check_down():
+            self.move_down()
+        self.set_move_status(False)
+        self.spawn_piece()
+
     def check_rotate(self):
         for block in self.piece.nextRotate:
-            if not (0 <= block[0] < self.cup.width and block[1] < self.cup.height and self.cup.gridList[block[1]][
+            if not (0 <= block[0] < self.cup.width and 0 <= block[1] < self.cup.height and self.cup.gridList[block[1]][
                 block[0]] < 10):
                 return False
         else:
@@ -146,24 +159,21 @@ class Game:
         now = time.time()
         if self.check_down():
             self.cup.clear()
-            # print(self.piece.massBlocks)
             self.piece.set_XY(self.piece.X, self.piece.Y + 1)
             self.set_move_status(self.piece.massBlocks)
-            current_time = now
         else:
             self.set_move_status(False)
-            self.piece.massBlocks.clear()
+            self.spawn_piece()
+        current_time = now
 
     def run(self):
         run = True
-
         while run:
             run = self.handle_events()
-
-            self.move_piece()
             self.draw()
-            self.spawn_piece()
+            self.move_piece()
             self.clock.tick(FPS)
+
         pygame.quit()
         quit()
 
@@ -173,7 +183,7 @@ class Cup:
         self.width, self.height = cup_w, cup_h
         self.surface = serface
         self.cell_size = cell_size
-        self.gridList = [[0] * self.width for x in range(self.height)]
+        self.gridList = [[0] * self.width for _ in range(self.height)]
         self.posX = (WINDOW_W - self.width * cell_size) // 2
         self.posY = WINDOW_H - self.height * cell_size
         self.colors = {
@@ -214,12 +224,6 @@ class Cup:
 
         for _ in lines:
             self.gridList.insert(0, [0] * self.width)
-        #
-        # if flag:
-        #     print()
-        #     [print(x) for x in self.gridList]
-        #     print()
-        #     print()
 
     def draw(self, colors):
 
