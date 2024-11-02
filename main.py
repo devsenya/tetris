@@ -11,6 +11,8 @@ FPS = 120
 fall_time = 0.5  # Интервал времени между падениями фигурки (в секундах)
 current_time = 0
 now = time.time()
+pygame.font.init()
+LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
 
 def drawRect(surface, color, rect):
@@ -45,6 +47,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10, self.win, 20)
         self.spawn_piece()
+        self.background_image = pygame.image.load("IM1.JPG")
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -66,7 +69,13 @@ class Game:
 
     def draw(self):
         # self.win.blit(self.background_image, self.background_image.get_rect())
+
+        # f1 = pygame.font.Font(None, 36)
+        # text1 = f1.render('Hello Привет', 1, (180, 0, 0))
+        # self.win.blit(text1, (10, 50))
         self.win.fill(WHITE)
+        text = LIVES_FONT.render("11", 1, "black")
+        self.win.blit(text, (0, 0))
         self.cup.draw(self)
         pygame.display.flip()
 
@@ -219,11 +228,14 @@ class Cup:
                 flag = True
                 lines.append(x)
 
-        for m in lines:
-            del self.gridList[m]
+        if lines:
+            print(f"--->{len(lines)}<---")
 
-        for _ in lines:
-            self.gridList.insert(0, [0] * self.width)
+            for m in lines:
+                del self.gridList[m]
+
+            for _ in lines:
+                self.gridList.insert(0, [0] * self.width)
 
     def draw(self, colors):
 
