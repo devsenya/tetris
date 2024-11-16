@@ -8,7 +8,6 @@ WINDOW_W, WINDOW_H = 600, 500
 GREY = (180, 180, 180)
 WHITE = (255, 255, 255)
 FPS = 120
-fall_time = 0.5  # Интервал времени между падениями фигурки (в секундах)
 current_time = 0
 now = time.time()
 pygame.font.init()
@@ -48,6 +47,11 @@ class Game:
         self.cup = Cup(20, 10, self.win, 20)
         self.spawn_piece()
         self.background_image = pygame.image.load("IM1.JPG")
+        self.SCORE = 0
+        self.linesToNextLevel = 10
+        self.LEVEL = 0
+        self.set_speed()  # Интервал времени между падениями фигурки (в секундах)
+        print()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -64,7 +68,6 @@ class Game:
                     self.check_rotate()
                 elif event.key == pygame.K_SPACE:
                     pass
-
         return True
 
     def draw(self):
@@ -74,8 +77,8 @@ class Game:
         # text1 = f1.render('Hello Привет', 1, (180, 0, 0))
         # self.win.blit(text1, (10, 50))
         self.win.fill(WHITE)
-        text = LIVES_FONT.render("11", 1, "black")
-        self.win.blit(text, (0, 0))
+        score = LIVES_FONT.render(str(self.SCORE), 1, "black")
+        self.win.blit(score, (0, 0))
         self.cup.draw(self)
         pygame.display.flip()
 
@@ -84,7 +87,7 @@ class Game:
         now = time.time()
         # подение куба
         # должно будет работать только если фигура еще падает
-        if now - current_time >= fall_time:
+        if now - current_time >= self.fall_time:
             self.move_down()
 
     def spawn_piece(self):
@@ -94,7 +97,6 @@ class Game:
                 if 1 <= x <= 7:
                     return
         else:
-            print("заспавнили")
             self.piece = randomPiece()
             self.piece.set_XY(self.piece.X, self.piece.Y)
             self.set_move_status()
@@ -111,7 +113,54 @@ class Game:
                 print(cube[1])
         if status >= 10:
             # TODO: Вынести в отдельную функцию/метод
-            self.cup.delete_lines()
+            if count_lines := self.cup.delete_lines():
+                self.set_score(count_lines)
+                self.check_level(count_lines)
+
+    def set_score(self, count_lines):
+        match count_lines:
+            case 1:
+                self.SCORE += 100
+            case 2:
+                self.SCORE += 300
+            case 3:
+                self.SCORE += 700
+            case 4:
+                self.SCORE += 1500
+            case _:
+                pass
+
+    def set_speed(self):
+        match self.LEVEL:
+            case 0: frame = 48
+            case 1: frame = 43
+            case 2: frame = 38
+            case 3: frame = 33
+            case 4: frame = 28
+            case 5: frame = 23
+            case 6: frame = 18
+            case 7: frame = 13
+            case 8: frame = 8
+            case 9: frame = 6
+            case 10: frame = 5
+            case 11: frame = 5
+            case 12: frame = 5
+            case 13: frame = 4
+            case 14: frame = 4
+            case 15: frame = 4
+            case 16: frame = 3
+            case 17: frame = 3
+            case 18: frame = 3
+            case _: frame = 2
+        self.fall_time = round(frame / 60, 2)
+
+    def check_level(self, count_lines):
+        self.linesToNextLevel -= count_lines
+        if self.linesToNextLevel <= 0:
+            self.LEVEL += 1
+            self.set_speed()
+            print("Уровень-----", self.LEVEL)
+            self.linesToNextLevel = 10 - abs(self.linesToNextLevel)
 
     def move_left(self):
         if self.check_left():
@@ -236,6 +285,7 @@ class Cup:
 
             for _ in lines:
                 self.gridList.insert(0, [0] * self.width)
+        return len(lines)
 
     def draw(self, colors):
 
