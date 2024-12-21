@@ -3,28 +3,14 @@ import time
 
 import pygame
 
+from data import config, blocks
 from data.blocks import I_Type, S_Type, Z_Type, L_Type, T_Type, J_Type, O_Type
 from data.board import Cup
 from data.config import WINDOW_W, WINDOW_H, WHITE, LIVES_FONT, FPS
+from presentation.renderer import CupRenderer
 
 
-def randomPiece():
-    num = random.randint(1, 7)
-    match num:
-        case 1:
-            return I_Type(5, 1)
-        case 2:
-            return O_Type(4, 0)
-        case 3:
-            return S_Type(5, 0)
-        case 4:
-            return Z_Type(5, 1)
-        case 5:
-            return L_Type(5, 1)
-        case 6:
-            return J_Type(5, 1)
-        case 7:
-            return T_Type(5, 0)
+
 
 class Game:
     def __init__(self):
@@ -32,8 +18,14 @@ class Game:
         self.win = pygame.display.set_mode((WINDOW_W, WINDOW_H))
         pygame.display.set_caption("TETRIS")
         self.clock = pygame.time.Clock()
-        self.cup = Cup(20, 10, self.win, 20)
+        self.cup = Cup(20, 10)
+        self.demoCup = Cup(4, 4)
+        self.cupRenderer = CupRenderer(self.win, self.cup.width, self.cup.height, 20, self.cup.gridList)
+        self.demoCupRenderer = CupRenderer(self.win, self.demoCup.width, self.demoCup.height, 20, self.demoCup.gridList)
+        self.piece = None
+        self.demoPiece = None
         self.spawn_piece()
+        self.spawn_demoPiece()
         self.background_image = pygame.image.load("IM1.JPG")
         self.SCORE = 0
         self.linesToNextLevel = 10
@@ -61,13 +53,11 @@ class Game:
     def draw(self):
         # self.win.blit(self.background_image, self.background_image.get_rect())
 
-        # f1 = pygame.font.Font(None, 36)
-        # text1 = f1.render('Hello Привет', 1, (180, 0, 0))
-        # self.win.blit(text1, (10, 50))
         self.win.fill(WHITE)
         score = LIVES_FONT.render(str(self.SCORE), 1, "black")
         self.win.blit(score, (0, 0))
-        self.cup.draw(self)
+        self.cupRenderer.draw((config.WINDOW_W - self.cupRenderer.cup_width * self.cupRenderer.cell_size) // 2, config.WINDOW_H - self.cupRenderer.cup_height * self.cupRenderer.cell_size)
+        self.demoCupRenderer.draw(450, 50)
         pygame.display.flip()
 
     def move_piece(self):
@@ -85,11 +75,23 @@ class Game:
                 if 1 <= x <= 7:
                     return
         else:
-            self.piece = randomPiece()
+            self.piece = self.demoPiece if self.demoPiece else blocks.randomPiece()
+            self.spawn_demoPiece()
             self.piece.set_XY(self.piece.X, self.piece.Y)
             self.set_move_status()
             now = time.time()
             current_time = now
+
+    def spawn_demoPiece(self):
+        self.demoCup.clear()
+        self.demoPiece = blocks.randomPiece()
+        self.demoPiece.set_XY(self.demoPiece.X, self.demoPiece.Y)
+        for cube in self.demoPiece.massBlocks:
+            try:
+                self.demoCup.gridList[cube[1]][cube[0]-3] = self.demoPiece.id
+            except:
+                print(cube[1])
+
 
     # скорее всего это должа делать игра
     def set_move_status(self, is_moving=True):  # [(0,0),(1,0),(0,1),(1,1)]

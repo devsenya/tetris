@@ -1,4 +1,5 @@
 import abc
+import random
 
 
 class Shape(abc.ABC):
@@ -7,6 +8,7 @@ class Shape(abc.ABC):
         self.Y = Y
         self.variationNum = 0
         self.variations = self.get_variations()
+        self.update_massBlocks()
 
     def set_XY(self, X, Y):
         self.X = X
@@ -62,7 +64,7 @@ class S_Type(Shape):
         self.id = 3
 
     def get_variations(self):
-        return [[(self.X - 1, self.Y + 1), (self.X, self.Y + 1), (self.X, self.Y), (self.X + 1, self.Y)],
+        return [[(self.X - 1, self.Y), (self.X, self.Y - 1), (self.X, self.Y), (self.X + 1, self.Y-1)],
                 [(self.X - 1, self.Y - 1), (self.X - 1, self.Y), (self.X, self.Y), (self.X, self.Y + 1)]]
 
 
@@ -73,7 +75,7 @@ class Z_Type(Shape):
 
     def get_variations(self):
         return [[(self.X - 1, self.Y - 1), (self.X, self.Y - 1), (self.X, self.Y), (self.X + 1, self.Y)],
-                [(self.X + 1, self.Y - 1), (self.X + 1, self.Y), (self.X, self.Y), (self.X, self.Y + 1)]]
+                [(self.X, self.Y - 1), (self.X, self.Y), (self.X - 1, self.Y), (self.X - 1, self.Y + 1)]]
 
 
 class L_Type(Shape):
@@ -110,3 +112,22 @@ class T_Type(Shape):
                 [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X - 1, self.Y)],
                 [(self.X - 1, self.Y), (self.X, self.Y), (self.X + 1, self.Y), (self.X, self.Y - 1)],
                 [(self.X, self.Y - 1), (self.X, self.Y), (self.X, self.Y + 1), (self.X + 1, self.Y)]]
+
+
+def randomPiece():
+    num = random.randint(1, 7)
+    match num:
+        case 1:
+            return I_Type(5, 1)
+        case 2:
+            return O_Type(4, 0)
+        case 3:
+            return S_Type(5, 1)
+        case 4:
+            return Z_Type(5, 1)
+        case 5:
+            return L_Type(4, 1)
+        case 6:
+            return J_Type(5, 1)
+        case 7:
+            return T_Type(5, 0)
