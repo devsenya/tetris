@@ -6,7 +6,7 @@ import pygame
 from data import config, blocks
 from data.blocks import I_Type, S_Type, Z_Type, L_Type, T_Type, J_Type, O_Type
 from data.board import Cup
-from data.config import WINDOW_W, WINDOW_H, WHITE, LIVES_FONT, FPS
+from data.config import WINDOW_W, WINDOW_H, WHITE, LIVES_FONT, FPS, GREY
 from presentation.renderer import CupRenderer
 
 
@@ -20,8 +20,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.cup = Cup(20, 10)
         self.demoCup = Cup(4, 4)
-        self.cupRenderer = CupRenderer(self.win, self.cup.width, self.cup.height, 20, self.cup.gridList)
-        self.demoCupRenderer = CupRenderer(self.win, self.demoCup.width, self.demoCup.height, 20, self.demoCup.gridList)
+        self.cupRenderer = CupRenderer(self.win, self.cup.width, self.cup.height, 20, self.cup.gridList, GREY)
+        self.demoCupRenderer = CupRenderer(self.win, self.demoCup.width, self.demoCup.height, 20, self.demoCup.gridList, WHITE)
         self.piece = None
         self.demoPiece = None
         self.spawn_piece()
@@ -201,6 +201,8 @@ class Game:
             self.cup.clear()
             self.piece.set_XY(self.piece.X, self.piece.Y)
             self.set_move_status(self.piece.massBlocks)
+
+
 
     def move_down(self):
         global current_time, now

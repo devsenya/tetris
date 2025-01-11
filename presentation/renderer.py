@@ -1,15 +1,13 @@
 import pygame
 
-from data import config
-from data.config import GREY, WINDOW_H
-
 
 class CupRenderer:
-    def __init__(self, surface, cup_width, cup_height, cell_size, gridList):
+    def __init__(self, surface, cup_width, cup_height, cell_size, gridList, color):
         self.gridList = gridList
         self.cup_width, self.cup_height = cup_width, cup_height
         self.surface = surface
         self.cell_size = cell_size
+        self.color = color
 
         self.colors = {
             "LIGHT_BLUE": (135, 206, 250),
@@ -37,10 +35,10 @@ class CupRenderer:
             startPoint = self.posX + self.cell_size * numLine, self.posY
             endPoint = self.posX + self.cell_size * numLine, self.posY + self.cell_size * self.cup_height
 
-            pygame.draw.line(self.surface, GREY, startPoint, endPoint)
+            pygame.draw.line(self.surface, self.color, startPoint, endPoint)
         # отрисовка горизонтальных линий
         for x in range(self.cup_height + 1):
-            pygame.draw.line(self.surface, GREY, (self.posX, self.posY + self.cell_size * x),
+            pygame.draw.line(self.surface, self.color, (self.posX, self.posY + self.cell_size * x),
                              (self.posX + self.cup_width * self.cell_size, self.posY + self.cell_size * x))
         # отрисовка фигур
         for line in range(len(self.gridList)):
